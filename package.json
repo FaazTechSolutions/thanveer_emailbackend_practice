@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@ai-sdk/openai": "^2.0.53",
     "@neondatabase/serverless": "^1.0.2",
     "@openrouter/ai-sdk-provider": "^1.2.0",
     "ai": "^5.0.76",

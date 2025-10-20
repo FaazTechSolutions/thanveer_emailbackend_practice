@@ -1,5 +1,6 @@
 import { generateText } from 'ai';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
+import {openai} from '@ai-sdk/openai'
 import { safeJsonParse, validateConfidence } from './json-utils.ts';
 import { formatEmailText, formatPrompt } from './text-utils.ts';
 
