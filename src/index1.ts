@@ -141,51 +141,81 @@ app.get("/ingest-email", async (req, res) => {
 });
 
 app.get("/emails", async (req, res) => {
-  const page = parseInt(req.query.page as string) || 1;
-  const size = parseInt(req.query.size as string) || 10;
-  const orderBy = (req.query.orderby as string) || "CreatedDateTime";
-  const orderDir = parseInt(req.query.orderdir as string) || 0; // 0=asc, 1=desc
-  const typeFilter = (req.query.type as string) || "Tickets";
+    const page = parseInt(req.query.page as string) || 1;
+    const size = parseInt(req.query.size as string) || 10;
+    const orderBy = (req.query.orderby as string) || "CreatedDateTime";
+    const orderDir = parseInt(req.query.orderdir as string) || 0; // 0=asc, 1=desc
+    const typeFilter = (req.query.type as string) || "Tickets";
+    
+    const ENTITY_ID = "ETN0000041";
+    const BASE_URL = "https://portal.mawarid.com.sa/apps4x-api/api/v1/data/LGE0000001";
 
-  const ENTITY_ID = "ETN0000041";
-  const BASE_URL = "https://portal.mawarid.com.sa/apps4x-api/api/v1/data/LGE0000001";
-
-  try {
-    // Build query params
-    const params = new URLSearchParams({
-      entityid: ENTITY_ID,
-      $page: page.toString(),
-      $size: size.toString(),
-      $orderby: orderBy,
-      $orderbydirection: orderDir.toString(),
-      "$filter:Type": `eq:${typeFilter}`,
+    console.log(`📧 [FETCH_EMAILS] Starting request:`, {
+        page,
+        size,
+        orderBy,
+        orderDir,
+        typeFilter,
+        hasApiToken: !!process.env.Api_token
     });
 
-    const response = await fetch(`${BASE_URL}?${params.toString()}`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${process.env.Api_token || ""}`,
-        "Content-Type": "application/json",
-      },
-    });
+    try {
+        // Build query params
+        const params = new URLSearchParams({
+            entityid: ENTITY_ID,
+            $page: page.toString(),
+            $size: size.toString(),
+            $orderby: orderBy,
+            $orderbydirection: orderDir.toString(),
+            "$filter:Type": `eq:${typeFilter}`,
+        });
 
-    if (!response.ok) {
-      throw new Error(`API responded with status ${response.status}`);
+        const apiUrl = `${BASE_URL}?${params.toString()}`;
+        console.log(`🔗 [API_REQUEST] URL: ${apiUrl}`);
+
+        const headers = {
+            Authorization: `Bearer ${process.env.Api_token || ""}`,
+            "Content-Type": "application/json",
+        };
+
+        console.log(`🔑 [API_HEADERS] Auth token present: ${!!process.env.Api_token}`);
+
+        const response = await fetch(apiUrl, {
+            method: "GET",
+            headers: headers,
+        });
+
+        console.log(`📡 [API_RESPONSE] Status: ${response.status} ${response.statusText}`);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`❌ [API_ERROR] HTTP ${response.status}:`, errorText);
+            throw new Error(`API responded with status ${response.status}: ${errorText}`);
+        }
+
+        const data = await response.json();
+        console.log(`✅ [API_SUCCESS] Received ${data?.Items?.length || data?.length || 0} items`);
+
+        return res.status(200).json({
+            success: true,
+            page,
+            size,
+            total: data?.TotalCount || data?.length || 0,
+            data: data?.Items || data,
+        });
+    } catch (err: any) {
+        console.error("❌ [FETCH_EMAILS_FAILED] Full error:", {
+            message: err.message,
+            stack: err.stack,
+            url: `${BASE_URL}?entityid=${ENTITY_ID}&$page=${page}&$size=${size}`
+        });
+        
+        return res.status(500).json({ 
+            success: false, 
+            error: err.message,
+            details: "Check server logs for more information"
+        });
     }
-
-    const data = await response.json();
-
-    return res.status(200).json({
-      success: true,
-      page,
-      size,
-      total: data?.TotalCount || data?.length || 0,
-      data: data?.Items || data,
-    });
-  } catch (err: any) {
-    console.error("❌ Fetch emails failed:", err.message);
-    return res.status(500).json({ success: false, error: err.message });
-  }
 });
 app.get("/email-by-reqid", async (req, res) => {
   const reqId = req.query.req_id as string;
