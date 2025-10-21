@@ -19,7 +19,8 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
-    "html-to-text": "^9.0.5"
+    "html-to-text": "^9.0.5",
+      "node-fetch": "^2.7.0"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.6",
