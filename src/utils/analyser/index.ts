@@ -118,8 +118,8 @@
 // }
 
 
-import { analyzeEmail } from './analysis-service.ts';
-import { planNextAction } from './action-service.ts';
+import { analyzeEmail } from './analysis-service.js';
+import { planNextAction } from './action-service.js';
 
 // Define the action types as a union type for reuse
 export type ActionType =

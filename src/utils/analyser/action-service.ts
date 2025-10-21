@@ -1,6 +1,8 @@
 import { generateText } from 'ai';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
-import { safeJsonParse } from './json-utils.ts';
+import { safeJsonParse } from './json-utils.js';
+import dotenv from "dotenv";
+dotenv.config();
 export interface Classification {
   category: 'billing' | 'technical_support' | 'account_management' | 'product_inquiry' | 'complaint' | 'feedback' | 'other';
   priority: 'low' | 'medium' | 'high' | 'urgent';

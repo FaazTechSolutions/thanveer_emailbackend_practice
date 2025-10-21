@@ -1,7 +1,7 @@
 //this improved error logger so that can move to next
 
 // /********************************************************************
-//  * email-analyzer.ts
+//  * email-analyzer.js
 //  * ---------------------------------------------------------------
 //  * Classifies emails, extracts structured info + action items,
 //  * and determines Next Best Action using LLM.
@@ -391,7 +391,7 @@
 
 //this does not include json parse safe function
 // /********************************************************************
-//  * email-analyzer.ts
+//  * email-analyzer.js
 //  * ---------------------------------------------------------------
 //  * Classifies emails, extracts structured info + action items,
 //  * and determines Next Best Action using LLM.
@@ -606,7 +606,7 @@
 
 
 /********************************************************************
- * email-analyzer.ts
+ * email-analyzer.js
  * ---------------------------------------------------------------
  * Classifies emails, extracts structured info + action items,
  * and determines Next Best Action using LLM.

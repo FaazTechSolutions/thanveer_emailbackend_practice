@@ -1,5 +1,5 @@
-import { analyzeEmail} from "../utils/analyser/analysis-service.ts";
-import { processEmailAnalysis } from "../utils/analyser/index.ts";
+import { analyzeEmail} from "../utils/analyser/analysis-service.js";
+import { processEmailAnalysis } from "../utils/analyser/index.js";
 
 export default async function handleAnalysis(content: any, reqid: string) {
   try {

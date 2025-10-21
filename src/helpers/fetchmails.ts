@@ -1,3 +1,5 @@
+import dotenv from "dotenv";
+dotenv.config();
 export default async function fetchEmails(page: number, size: number, specificReqId?: string) {
   const baseUrl =
     "https://portal.mawarid.com.sa/apps4x-api/api/v1/data/LGE0000001?entityid=ETN0000041";

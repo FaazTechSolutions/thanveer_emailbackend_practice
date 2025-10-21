@@ -1,6 +1,6 @@
 import { generateText } from 'ai';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
-import { isArabic } from './arabic-detection.ts';
+import { isArabic } from './arabic-detection.js';
 export interface TokenUsage {
   inputTokens: number;
   outputTokens: number;

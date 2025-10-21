@@ -1,4 +1,15 @@
 {
+  "name": "aiemailagents",
+  "version": "1.0.0",
+  "description": "AI Email Processing API",
+  "main": "dist/index1.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index1.js",
+    "dev": "tsx watch src/index1.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.53",
     "@neondatabase/serverless": "^1.0.2",
@@ -8,12 +19,8 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
-    "html-to-text": "^9.0.5",
-    "install": "^0.13.0",
-    "npm": "^11.6.2",
-    "pg": "^8.16.3"
+    "html-to-text": "^9.0.5"
   },
-  "type": "module",
   "devDependencies": {
     "@types/body-parser": "^1.19.6",
     "@types/cors": "^2.8.19",
@@ -25,14 +32,7 @@
     "tsx": "^4.20.6",
     "typescript": "^5.9.3"
   },
-  "name": "aiemailagents",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
+  "keywords": ["email", "ai", "processing", "api"],
   "author": "",
   "license": "ISC"
 }

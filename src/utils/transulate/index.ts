@@ -1,8 +1,8 @@
 
 
-export { translateEmail, translateText } from './translation-provider.ts';
+export { translateEmail, translateText } from './translation-provider.js';
 
-export { isArabic } from './arabic-detection.ts';
+export { isArabic } from './arabic-detection.js';
 
 // sample
 // import { translateEmail, translateText, isArabic } from './arabic-translation-service';

@@ -1,8 +1,10 @@
 import { generateText } from 'ai';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import {openai} from '@ai-sdk/openai'
-import { safeJsonParse, validateConfidence } from './json-utils.ts';
-import { formatEmailText, formatPrompt } from './text-utils.ts';
+import { safeJsonParse, validateConfidence } from './json-utils.js';
+import { formatEmailText, formatPrompt } from './text-utils.js';
+import dotenv from "dotenv";
+dotenv.config();
 
 export interface Classification {
   category: 'billing' | 'technical_support' | 'account_management' | 'product_inquiry' | 'complaint' | 'feedback' | 'other';
