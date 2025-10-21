@@ -33,7 +33,22 @@ interface CleanedEmail {
 
 const app = express();
 app.use(bodyParser.json());
-app.use(cors());
+const allowedOrigins = [
+  "https://emailagentpractice.netlify.app",
+  "http://localhost:3000", // optional for local dev
+];
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true); // allow Postman or server-to-server requests
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = `CORS policy: ${origin} not allowed`;
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
 
 // Add health check endpoint
 app.get("/", (req, res) => {

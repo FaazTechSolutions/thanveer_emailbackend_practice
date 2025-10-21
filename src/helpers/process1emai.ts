@@ -33,5 +33,8 @@ export default async function processSingleEmail(email: any, specificReqId?: str
     requires_human_review: analysisResult?.requires_human_review || false,
     review_reason: analysisResult?.review_reason,
     created_at: new Date().toISOString(),
+    translationResult,
+    cleanedandoriginal,
+    analysisResult
   };
 }
