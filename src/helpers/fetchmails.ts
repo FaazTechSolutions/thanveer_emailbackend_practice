@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
-import fetch from "node-fetch";
+import nodeFetch from "node-fetch";
+
 export default async function fetchEmails(page: number, size: number, specificReqId?: string) {
   const baseUrl =
     "https://portal.mawarid.com.sa/apps4x-api/api/v1/data/LGE0000001?entityid=ETN0000041";
@@ -10,7 +11,7 @@ export default async function fetchEmails(page: number, size: number, specificRe
 
   console.log(`🌐 [API_CALL] → ${apiUrl}`);
 
-  const response = await fetch(apiUrl, {
+  const response = await nodeFetch(apiUrl, {
     headers: {
       Authorization: `Bearer ${process.env.Api_token}`,
       Accept: "application/json",
@@ -20,8 +21,8 @@ export default async function fetchEmails(page: number, size: number, specificRe
   if (!response.ok)
     throw new Error(`API fetch failed: ${response.status} ${response.statusText}`);
 
-  const data = await response.json();
+  const data:any = await response.json();
   console.log(`📦 [API_SUCCESS] Retrieved ${data?.Data?.length || 0} emails.`);
-  console.log('Data:', data.Data)
+  console.log('Data:', data.Data);
   return data?.Data || [];
 }

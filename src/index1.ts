@@ -105,7 +105,7 @@ app.get("/emails", async (req, res) => {
       throw new Error(`API responded with status ${response.status}`);
     }
 
-    const data = await response.json();
+    const data:any = await response.json();
     console.log(`✅ [API_SUCCESS] Received ${data?.Items?.length || data?.length || 0} items`);
 
     return res.status(200).json({
