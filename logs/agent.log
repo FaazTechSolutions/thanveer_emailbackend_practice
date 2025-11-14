@@ -1,0 +1,59 @@
+[2025-10-28T10:46:22.945Z] --------------------------------------------------
+[2025-10-28T10:46:22.947Z] 🧠 New Decision Agent Run Started
+[2025-10-28T10:46:22.949Z] 📦 Analysis Result: {
+  "req_id": 66712,
+  "was_translated": true,
+  "process_label": null,
+  "summary": "The email is regarding pending payments for AUG and SEP invoices, with a total difference of 101,832.25 that needs to be paid to release the OCT salary. The sender is requesting immediate clearance of the debt.",
+  "requires_human_review": false,
+  "created_at": "2025-10-28T10:46:22.945Z"
+}
+[2025-10-28T10:46:42.148Z] 🤖 Agent Output: {
+  "shouldSend": true,
+  "reason": "Urgent debt clearance request for AUG and SEP invoices; immediate payment required to release OCT salary.",
+  "subject": "Re: Pending payments for AUG and SEP invoices",
+  "message": "Please acknowledge receipt of the request to settle the outstanding amount for August and September invoices, totaling 101,832.25, to release the OCT salary. We will treat this as a priority and begin processing the payment immediately. If you can provide any supporting documents or a deadline, please share them to expedite the clearance."
+}
+[2025-10-28T10:46:45.657Z] 📤 Email sent successfully → 250 2.0.0 OK  1761648405 98e67ed59e1d1-33fed7e9660sm11664496a91.10 - gsmtp
+[2025-10-28T10:46:45.658Z] ✅ Auto-response sent to test inbox.
+[2025-10-28T10:46:45.659Z] 🧾 Decision Agent Run Completed
+
+[2025-10-28T10:48:18.943Z] --------------------------------------------------
+[2025-10-28T10:48:18.945Z] 🧠 New Decision Agent Run Started
+[2025-10-28T10:48:18.947Z] 📦 Analysis Result: {
+  "req_id": 66685,
+  "was_translated": true,
+  "process_label": null,
+  "summary": "The email requests the renewal of an Iqama for an employee with ID 91938, whose Iqama is set to expire on 26-Oct-25. The request is made by Mawadah Santali, a Senior Payroll Specialist.",
+  "requires_human_review": false,
+  "created_at": "2025-10-28T10:48:18.943Z"
+}
+[2025-10-28T10:48:39.247Z] 🤖 Agent Output: {
+  "shouldSend": true,
+  "reason": "No negative sentiment or high-priority signal detected; this is a routine payroll/admin renewal request that does not require escalation.",
+  "subject": "Acknowledgment: IQama renewal request for Employee ID 91938",
+  "message": "Hello Mawadah Santali,\n\nWe have received your request to renew the iqama for Employee ID 91938 (Iqama expiry: 26-Oct-2025). Our payroll/HR team will review and process this accordingly. We will contact you if additional information is required.\n\nThank you,\n[Company] HR/Payroll"
+}
+[2025-10-28T10:48:41.958Z] 📤 Email sent successfully → 250 2.0.0 OK  1761648521 d2e1a72fcca58-7a414012c6fsm11449763b3a.7 - gsmtp
+[2025-10-28T10:48:41.959Z] ✅ Auto-response sent to test inbox.
+[2025-10-28T10:48:41.961Z] 🧾 Decision Agent Run Completed
+
+[2025-10-28T10:49:27.199Z] --------------------------------------------------
+[2025-10-28T10:49:27.200Z] 🧠 New Decision Agent Run Started
+[2025-10-28T10:49:27.201Z] 📦 Analysis Result: {
+  "req_id": 66678,
+  "was_translated": true,
+  "process_label": null,
+  "summary": "The email informs about an employee's resignation request and requires action to process the payment and re-invoice the amount specified. The employee's last working day is 10-Nov-2025 and the net salary to be paid is 1,999 SAR.",
+  "requires_human_review": false,
+  "created_at": "2025-10-28T10:49:27.199Z"
+}
+[2025-10-28T10:49:40.123Z] 🤖 Agent Output: {
+  "shouldSend": false,
+  "reason": "Insufficient data to trigger automated acknowledgment per rules (no sentiment/priority/category signals provided). Analysis indicates payroll-related actions, not a customer-facing trigger.",
+  "subject": null,
+  "message": null
+}
+[2025-10-28T10:49:40.125Z] 🚫 No email sent → Insufficient data to trigger automated acknowledgment per rules (no sentiment/priority/category signals provided). Analysis indicates payroll-related actions, not a customer-facing trigger.
+[2025-10-28T10:49:40.127Z] 🧾 Decision Agent Run Completed
+

@@ -1,4 +1,5 @@
 import cleanEmail from "../utils/email_cleaner/index.ts";
+import saveToDatabaseMSSQL from "./dbsavemssql.ts";
 import handleAnalysis from "./handleanalysis.ts";
 import handleTranslation from "./handletranslation.ts";
 import saveToDatabase from "./savedb.ts";
@@ -23,7 +24,8 @@ export default async function processSingleEmail(email: any, specificReqId?: str
 
   // Database
   const cleanedandoriginal={ ...cleaned, originalEmail }
-  await saveToDatabase(reqid, cleanedandoriginal, translationResult, analysisResult, specificReqId);
+  await saveToDatabaseMSSQL(reqid, cleanedandoriginal, translationResult, analysisResult, specificReqId)
+  // await saveToDatabase(reqid, cleanedandoriginal, translationResult, analysisResult, specificReqId);
 
   return {
     req_id: reqid,

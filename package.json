@@ -1,6 +1,9 @@
 {
   "dependencies": {
     "@ai-sdk/openai": "^2.0.53",
+    "@langchain/core": "^1.0.2",
+    "@langchain/langgraph": "^1.0.1",
+    "@langchain/openai": "^1.0.0",
     "@neondatabase/serverless": "^1.0.2",
     "@openrouter/ai-sdk-provider": "^1.2.0",
     "ai": "^5.0.76",
@@ -9,7 +12,11 @@
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "html-to-text": "^9.0.5",
+    "i": "^0.3.7",
     "install": "^0.13.0",
+    "mssql": "^12.1.0",
+    "node-fetch": "^3.3.2",
+    "nodemailer": "^7.0.10",
     "npm": "^11.6.2",
     "pg": "^8.16.3"
   },
@@ -17,9 +24,12 @@
   "devDependencies": {
     "@types/body-parser": "^1.19.6",
     "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.3",
+    "@types/express": "^5.0.5",
     "@types/html-to-text": "^9.0.4",
-    "@types/node": "^24.8.1",
+    "@types/mssql": "^9.1.8",
+    "@types/node": "^24.9.1",
+    "@types/node-fetch": "^2.6.13",
+    "@types/nodemailer": "^7.0.3",
     "@types/pg": "^8.15.5",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.6",
