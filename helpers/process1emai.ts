@@ -1,8 +1,8 @@
-import cleanEmail from "../utils/email_cleaner/index.ts";
-import saveToDatabaseMSSQL from "./dbsavemssql.ts";
-import handleAnalysis from "./handleanalysis.ts";
-import handleTranslation from "./handletranslation.ts";
-import saveToDatabase from "./savedb.ts";
+import cleanEmail from "../utils/email_cleaner/index.js";
+import saveToDatabaseMSSQL from "./dbsavemssql.js";
+import handleAnalysis from "./handleanalysis.js";
+import handleTranslation from "./handletranslation.js";
+import saveToDatabase from "./savedb.js";
 
 export default async function processSingleEmail(email: any, specificReqId?: string) {
   const reqid = email.RecId;

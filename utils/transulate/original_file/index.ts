@@ -1,4 +1,4 @@
-// File: arabic-translation-service.ts
+// File: arabic-translation-service.js
 import { generateText } from 'ai';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import dotenv from 'dotenv';

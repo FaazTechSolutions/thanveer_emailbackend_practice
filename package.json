@@ -27,21 +27,28 @@
     "@types/express": "^5.0.5",
     "@types/html-to-text": "^9.0.4",
     "@types/mssql": "^9.1.8",
-    "@types/node": "^24.9.1",
+
     "@types/node-fetch": "^2.6.13",
     "@types/nodemailer": "^7.0.3",
     "@types/pg": "^8.15.5",
-    "ts-node": "^10.9.2",
+ 
     "tsx": "^4.20.6",
-    "typescript": "^5.9.3"
+ 
+      "@types/node": "^20.10.4",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.3.3"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/mssqlv1.js",
+    "dev": "ts-node src/mssqlv1.ts"
   },
   "name": "aiemailagents",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+
+
   "keywords": [],
   "author": "",
   "license": "ISC"

@@ -2,14 +2,14 @@ import express from "express";
 import bodyParser from "body-parser";
 import { neon } from "@neondatabase/serverless";
 import dotenv from "dotenv";
-import cleanEmail from "./utils/email_cleaner/index.ts"; // ← named export
-import setupTables from "./db/setuptables.ts";// ← named export
+import cleanEmail from "./utils/email_cleaner/index.js"; // ← named export
+import setupTables from "./db/setuptables.js";// ← named export
 import cors from "cors";
-import { translateEmail } from "./utils/transulate/index.ts";
-import { processEmailAnalysis } from "./utils/analyser/index.ts";
-import fetchEmails from "./helpers/fetchmails.ts";
-import processSingleEmail from "./helpers/process1emai.ts";
-import { runDecisionAgent } from "./utils/agents/email_decision_agent.ts";
+import { translateEmail } from "./utils/transulate/index.js";
+import { processEmailAnalysis } from "./utils/analyser/index.js";
+import fetchEmails from "./helpers/fetchmails.js";
+import processSingleEmail from "./helpers/process1emai.js";
+import { runDecisionAgent } from "./utils/agents/email_decision_agent.js";
 
 
 dotenv.config();

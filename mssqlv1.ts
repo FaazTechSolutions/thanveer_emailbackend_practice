@@ -4,19 +4,37 @@ import sql from "mssql";
 import dotenv from "dotenv";
 import cors from "cors";
 
-import cleanEmail from "./utils/email_cleaner/index.ts";
-import setupTablesMSSQL from "./db/mssqlsetup.ts";
-import { translateEmail } from "./utils/transulate/index.ts";
-import { processEmailAnalysis } from "./utils/analyser/index.ts";
-import fetchEmails from "./helpers/fetchmails.ts";
-import processSingleEmail from "./helpers/process1emai.ts";
+import cleanEmail from "./utils/email_cleaner/index.js";
+import setupTablesMSSQL from "./db/mssqlsetup.js";
+import { translateEmail } from "./utils/transulate/index.js";
+import { processEmailAnalysis } from "./utils/analyser/index.js";
+import fetchEmails from "./helpers/fetchmails.js";
+import processSingleEmail from "./helpers/process1emai.js";
 
 dotenv.config();
+const config: sql.config = {
+  user: process.env.DB_USER || "ftsdev",
+  password: process.env.DB_PASSWORD || "Faaz@123",
+  server: process.env.DB_SERVER || "ftsdev.database.windows.net",
+  database: process.env.DB_NAME || "FreeServerLess",
+  port: parseInt(process.env.DB_PORT || "1433"),
+  options: {
+    encrypt: true, // Azure requires encryption
+    trustServerCertificate: false,
+    enableArithAbort: true,
+    connectTimeout: 30000,
+  },
+  pool: {
+    max: 10,
+    min: 0,
+    idleTimeoutMillis: 30000,
+  },
+};
 
 if (!process.env.MSSQL_CONNECTION_STRING)
   throw new Error("MSSQL_CONNECTION_STRING is not set");
 
-const pool = await sql.connect(process.env.MSSQL_CONNECTION_STRING);
+const pool = await sql.connect(config);
 
 const app = express();
 app.use(bodyParser.json());

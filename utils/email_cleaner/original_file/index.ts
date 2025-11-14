@@ -1,7 +1,7 @@
 //this has pure clean email 
 
 // /********************************************************************
-//  * email-cleaner.ts
+//  * email-cleaner.js
 //  * ---------------------------------------------------------------
 //  * Unified email text preprocessing pipeline for AI email systems.
 //  * Tasks handled:
@@ -184,7 +184,7 @@
 
 
 /********************************************************************
- * email-cleaner-advanced.ts
+ * email-cleaner-advanced.js
  * ---------------------------------------------------------------
  * Production-grade email text preprocessing with multi-level regex
  * Advanced features:
@@ -197,7 +197,7 @@
  ********************************************************************/
 
 /********************************************************************
- * email-cleaner-advanced.ts
+ * email-cleaner-advanced.js
  * ---------------------------------------------------------------
  * Production-grade email text preprocessing with balanced cleaning
  * Fixed issues: Better table handling, signature detection, content preservation

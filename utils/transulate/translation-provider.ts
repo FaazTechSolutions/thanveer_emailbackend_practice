@@ -1,6 +1,6 @@
 import { generateText } from 'ai';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
-import { isArabic } from './arabic-detection.ts';
+import { isArabic } from './arabic-detection.js';
 export interface TokenUsage {
   inputTokens: number;
   outputTokens: number;
@@ -92,7 +92,7 @@ export async function translateEmail(
     `.trim();
 
     const result = await generateText({
-      model: openrouter.chat(process.env.AI_MODEL || 'mistralai/mistral-small-3.2-24b-instruct:free'),
+      model: openrouter.chat(process.env.AI_MODEL || 'openai/gpt-4o-mini'),
       prompt,
       temperature: 0.2,
     });

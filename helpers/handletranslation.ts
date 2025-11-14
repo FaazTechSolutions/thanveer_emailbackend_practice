@@ -1,5 +1,5 @@
-import { isArabic } from "../utils/transulate/arabic-detection.ts";
-import { translateEmail } from "../utils/transulate/translation-provider.ts";
+import { isArabic } from "../utils/transulate/arabic-detection.js";
+import { translateEmail } from "../utils/transulate/translation-provider.js";
 
 export default async function handleTranslation(originalEmail: any, reqid: string) {
   if (!isArabic(originalEmail.subject) && !isArabic(originalEmail.body))

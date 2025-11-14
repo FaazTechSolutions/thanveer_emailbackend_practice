@@ -1,7 +1,24 @@
 import sql from "mssql";
-
+const config: sql.config = {
+  user: process.env.DB_USER || "ftsdev",
+  password: process.env.DB_PASSWORD || "Faaz@123",
+  server: process.env.DB_SERVER || "ftsdev.database.windows.net",
+  database: process.env.DB_NAME || "FreeServerLess",
+  port: parseInt(process.env.DB_PORT || "1433"),
+  options: {
+    encrypt: true, // Azure requires encryption
+    trustServerCertificate: false,
+    enableArithAbort: true,
+    connectTimeout: 30000,
+  },
+  pool: {
+    max: 10,
+    min: 0,
+    idleTimeoutMillis: 30000,
+  },
+};
 // Re-use global config pool
-const poolPromise = sql.connect(process.env.MSSQL_CONNECTION_STRING!);
+const poolPromise = sql.connect(config);
 
 export default async function saveToDatabaseMSSQL(
   reqid: string,

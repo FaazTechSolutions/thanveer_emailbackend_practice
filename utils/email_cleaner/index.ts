@@ -1,10 +1,10 @@
 
-import { htmlToPlainText } from "./html-to-text.ts";
-import { extractLatestThread } from "./thread-extractor.ts";
-import { removeSignature } from "./signature-remover.ts";
-import { removeDisclaimers } from "./disclaimer-remover.ts";
-import { extractPrePostText } from "./prepost-extractor.ts";
-import { removeQuoteMarkers } from "./quote-remover.ts";
+import { htmlToPlainText } from "./html-to-text.js";
+import { extractLatestThread } from "./thread-extractor.js";
+import { removeSignature } from "./signature-remover.js";
+import { removeDisclaimers } from "./disclaimer-remover.js";
+import { extractPrePostText } from "./prepost-extractor.js";
+import { removeQuoteMarkers } from "./quote-remover.js";
 export interface CleanerConfig {
   preserveLinks?: boolean;
   maxLength?: number;
