@@ -3,7 +3,7 @@ import bodyParser from "body-parser";
 import sql from "mssql";
 import dotenv from "dotenv";
 import cors from "cors";
-
+//both are same
 import cleanEmail from "./utils/email_cleaner/index.js";
 import setupTablesMSSQL from "./db/mssqlsetup.js";
 import { translateEmail } from "./utils/transulate/index.js";
