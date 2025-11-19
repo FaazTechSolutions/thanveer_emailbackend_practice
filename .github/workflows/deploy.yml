@@ -20,7 +20,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'  # Change to your Node version
+          node-version: '20'
           cache: 'npm'
       
       # Step 3: Install dependencies
@@ -34,17 +34,18 @@ jobs:
         run: npm test
         continue-on-error: true
       
-      # Step 5: Build project - This creates the dist folder
+      # Step 5: Build project - Creates dist folder
       - name: Build project
         shell: cmd
         run: npm run build
       
       # Step 6: Verify dist folder exists
       - name: Verify build output
-        shell: pwsh
+        shell: powershell
         run: |
           if (Test-Path "dist") {
             Write-Host "✅ Dist folder found"
+            Write-Host "Contents:"
             Get-ChildItem -Path "dist" -Recurse -Name | Select-Object -First 10
           } else {
             Write-Host "❌ Dist folder not found!"
@@ -53,40 +54,40 @@ jobs:
       
       # Step 7: Stop the application (if running)
       - name: Stop application
-        shell: pwsh
+        shell: powershell
         run: |
           Write-Host "Stopping application if running..."
-          Stop-Process -Name "node" -Force -ErrorAction SilentlyContinue
+          Get-Process -Name "node" -ErrorAction SilentlyContinue | Stop-Process -Force
         continue-on-error: true
       
       # Step 8: Create deployment directory
       - name: Create deployment directory
-        shell: pwsh
+        shell: powershell
         run: |
           if (!(Test-Path "D:\iisapplications\Emailagent")) {
-            New-Item -ItemType Directory -Path "D:\iisapplications\Emailagent" -Force
-            Write-Host "Created directory: D:\iisapplications\Emailagent"
+            New-Item -ItemType Directory -Path "D:\iisapplications\Emailagent" -Force | Out-Null
+            Write-Host "✅ Created directory: D:\iisapplications\Emailagent"
           } else {
-            Write-Host "Directory already exists"
+            Write-Host "✅ Directory exists: D:\iisapplications\Emailagent"
           }
       
       # Step 9: Backup existing deployment
       - name: Backup existing deployment
-        shell: pwsh
+        shell: powershell
         run: |
           $backupPath = "D:\iisapplications\Emailagent_backup_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
           if (Test-Path "D:\iisapplications\Emailagent\*") {
-            New-Item -ItemType Directory -Path $backupPath -Force
+            New-Item -ItemType Directory -Path $backupPath -Force | Out-Null
             Copy-Item -Path "D:\iisapplications\Emailagent\*" -Destination $backupPath -Recurse -Force
-            Write-Host "✅ Backup created at: $backupPath"
+            Write-Host "✅ Backup created: $backupPath"
           } else {
-            Write-Host "No existing files to backup"
+            Write-Host "ℹ️ No existing files to backup"
           }
         continue-on-error: true
       
-      # Step 10: Clear deployment directory (keep node_modules for speed)
+      # Step 10: Clear deployment directory (except node_modules)
       - name: Clear deployment directory
-        shell: pwsh
+        shell: powershell
         run: |
           $targetPath = "D:\iisapplications\Emailagent"
           if (Test-Path "$targetPath\*") {
@@ -96,39 +97,33 @@ jobs:
           }
         continue-on-error: true
       
-      # Step 11: Copy dist folder contents (extract files from dist)
-      - name: Deploy dist contents
-        shell: pwsh
+      # Step 11: Extract and deploy dist contents
+      - name: Deploy dist contents to root
+        shell: powershell
         run: |
-          $sourceDist = Join-Path $env:GITHUB_WORKSPACE "dist"
-          $destination = "D:\iisapplications\Emailagent"
+          $distPath = Join-Path $env:GITHUB_WORKSPACE "dist"
+          $targetPath = "D:\iisapplications\Emailagent"
           
-          Write-Host "Deploying contents from dist folder..."
+          Write-Host "📦 Extracting dist contents..."
+          Write-Host "Source: $distPath"
+          Write-Host "Target: $targetPath"
           
-          # Copy everything inside dist folder to root of deployment directory
-          if (Test-Path $sourceDist) {
-            Get-ChildItem -Path $sourceDist -Recurse | ForEach-Object {
-              $targetPath = $_.FullName.Replace($sourceDist, $destination)
-              
-              if ($_.PSIsContainer) {
-                New-Item -ItemType Directory -Path $targetPath -Force | Out-Null
-              } else {
-                $targetDir = Split-Path -Parent $targetPath
-                if (!(Test-Path $targetDir)) {
-                  New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
-                }
-                Copy-Item -Path $_.FullName -Destination $targetPath -Force
-              }
-            }
-            Write-Host "✅ Dist contents deployed successfully"
+          if (Test-Path $distPath) {
+            # Copy everything from inside dist folder to target root
+            Copy-Item -Path "$distPath\*" -Destination $targetPath -Recurse -Force
+            
+            Write-Host "✅ Dist contents extracted successfully"
+            Write-Host ""
+            Write-Host "Deployed structure:"
+            Get-ChildItem -Path $targetPath -Name | Where-Object { $_ -ne "node_modules" }
           } else {
-            Write-Host "❌ Dist folder not found at: $sourceDist"
+            Write-Host "❌ Error: dist folder not found at $distPath"
             exit 1
           }
       
       # Step 12: Copy package.json
       - name: Copy package.json
-        shell: pwsh
+        shell: powershell
         run: |
           $source = Join-Path $env:GITHUB_WORKSPACE "package.json"
           $destination = "D:\iisapplications\Emailagent\package.json"
@@ -141,9 +136,9 @@ jobs:
             exit 1
           }
       
-      # Step 13: Copy package-lock.json (if exists)
+      # Step 13: Copy package-lock.json (optional)
       - name: Copy package-lock.json
-        shell: pwsh
+        shell: powershell
         run: |
           $source = Join-Path $env:GITHUB_WORKSPACE "package-lock.json"
           $destination = "D:\iisapplications\Emailagent\package-lock.json"
@@ -152,7 +147,7 @@ jobs:
             Copy-Item -Path $source -Destination $destination -Force
             Write-Host "✅ package-lock.json copied"
           } else {
-            Write-Host "⚠️ package-lock.json not found (skipping)"
+            Write-Host "⚠️ package-lock.json not found (optional)"
           }
         continue-on-error: true
       
@@ -160,37 +155,63 @@ jobs:
       - name: Install production dependencies
         shell: cmd
         run: |
-          cd D:\iisapplications\Emailagent
+          cd /d D:\iisapplications\Emailagent
           npm install --production
       
-      # Step 15: Start the application (optional)
+      # Step 15: Verify deployment
+      - name: Verify deployment structure
+        shell: powershell
+        run: |
+          Write-Host ""
+          Write-Host "📂 Final deployment structure:"
+          Get-ChildItem -Path "D:\iisapplications\Emailagent" -Name
+          Write-Host ""
+          
+          # Check key files
+          $requiredFiles = @("server.js", "package.json")
+          foreach ($file in $requiredFiles) {
+            if (Test-Path "D:\iisapplications\Emailagent\$file") {
+              Write-Host "✅ $file exists"
+            } else {
+              Write-Host "❌ $file missing"
+            }
+          }
+      
+      # Step 16: Start application (optional)
       - name: Start application
-        shell: pwsh
+        shell: powershell
         run: |
           Set-Location "D:\iisapplications\Emailagent"
-          # Add your start command here
-          # Example with PM2: pm2 restart emailagent
-          # Example with node: Start-Process -FilePath "node" -ArgumentList "server.js" -WindowStyle Hidden
-          Write-Host "✅ Application ready to start"
+          Write-Host "✅ Ready to start application"
+          Write-Host ""
+          Write-Host "To start manually, run:"
+          Write-Host "  cd D:\iisapplications\Emailagent"
+          Write-Host "  node server.js"
+          
+          # Uncomment to auto-start:
+          # Start-Process -FilePath "node" -ArgumentList "server.js" -WorkingDirectory "D:\iisapplications\Emailagent"
         continue-on-error: true
       
-      # Step 16: Deployment summary
+      # Step 17: Deployment summary
       - name: Deployment Summary
-        shell: pwsh
+        shell: powershell
         run: |
           Write-Host ""
-          Write-Host "╔════════════════════════════════════════╗"
-          Write-Host "║     DEPLOYMENT SUCCESSFUL ✅           ║"
-          Write-Host "╚════════════════════════════════════════╝"
+          Write-Host "═══════════════════════════════════════════════"
+          Write-Host "         DEPLOYMENT SUCCESSFUL ✅              "
+          Write-Host "═══════════════════════════════════════════════"
           Write-Host ""
-          Write-Host "📁 Deployed to: D:\iisapplications\Emailagent"
+          Write-Host "📁 Location: D:\iisapplications\Emailagent"
           Write-Host "⏰ Time: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
           Write-Host "🌿 Branch: $env:GITHUB_REF_NAME"
           Write-Host "📝 Commit: $($env:GITHUB_SHA.Substring(0,7))"
           Write-Host ""
-          Write-Host "📦 Deployed files:"
-          Get-ChildItem -Path "D:\iisapplications\Emailagent" -Name | Where-Object { $_ -ne "node_modules" } | ForEach-Object {
-            Write-Host "   • $_"
-          }
+          Write-Host "📦 Deployed from dist:"
+          Write-Host "   • server.js"
+          Write-Host "   • helper/"
+          Write-Host "   • db/"
+          Write-Host "   • utils/"
+          Write-Host "   • package.json"
+          Write-Host "   • node_modules/"
           Write-Host ""
-          Write-Host "✅ Ready to start application!"
+          Write-Host "═══════════════════════════════════════════════"
