@@ -24,8 +24,8 @@ export default async function processSingleEmail(email: any, specificReqId?: str
 
   // Database
   const cleanedandoriginal={ ...cleaned, originalEmail }
-  await saveToDatabaseMSSQL(reqid, cleanedandoriginal, translationResult, analysisResult, specificReqId)
-  // await saveToDatabase(reqid, cleanedandoriginal, translationResult, analysisResult, specificReqId);
+  // await saveToDatabaseMSSQL(reqid, cleanedandoriginal, translationResult, analysisResult, specificReqId)
+  await saveToDatabase(reqid, cleanedandoriginal, translationResult, analysisResult, specificReqId);
 
   return {
     req_id: reqid,

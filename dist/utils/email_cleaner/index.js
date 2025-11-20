@@ -2,12 +2,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DEFAULT_CONFIG = void 0;
 exports.default = cleanEmail;
-const html_to_text_js_1 = require("./html-to-text.js");
 const thread_extractor_js_1 = require("./thread-extractor.js");
 const signature_remover_js_1 = require("./signature-remover.js");
 const disclaimer_remover_js_1 = require("./disclaimer-remover.js");
 const prepost_extractor_js_1 = require("./prepost-extractor.js");
 const quote_remover_js_1 = require("./quote-remover.js");
+const html_to_text1_js_1 = require("./html-to-text1.js");
 exports.DEFAULT_CONFIG = {
     preserveLinks: false,
     maxLength: 10000,
@@ -19,7 +19,8 @@ exports.DEFAULT_CONFIG = {
 function cleanEmail(htmlBody, config = {}) {
     const mergedConfig = { ...exports.DEFAULT_CONFIG, ...config };
     // Step 1: HTML to plain text
-    let text = (0, html_to_text_js_1.htmlToPlainText)(htmlBody, mergedConfig);
+    // let text = htmlToPlainText(htmlBody, mergedConfig);
+    let text = (0, html_to_text1_js_1.finalcleanEmailtext)(htmlBody, mergedConfig);
     if (!text || text.length < 10) {
         return {
             pretext: "",

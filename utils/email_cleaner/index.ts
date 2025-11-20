@@ -5,6 +5,7 @@ import { removeSignature } from "./signature-remover.js";
 import { removeDisclaimers } from "./disclaimer-remover.js";
 import { extractPrePostText } from "./prepost-extractor.js";
 import { removeQuoteMarkers } from "./quote-remover.js";
+import { finalcleanEmailtext } from "./html-to-text1.js";
 export interface CleanerConfig {
   preserveLinks?: boolean;
   maxLength?: number;
@@ -44,7 +45,8 @@ export default function cleanEmail(
   const mergedConfig = { ...DEFAULT_CONFIG, ...config };
 
   // Step 1: HTML to plain text
-  let text = htmlToPlainText(htmlBody, mergedConfig);
+  // let text = htmlToPlainText(htmlBody, mergedConfig);
+  let text = finalcleanEmailtext(htmlBody, mergedConfig);
   if (!text || text.length < 10) {
     return {
       pretext: "",

@@ -5,9 +5,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = processSingleEmail;
 const index_js_1 = __importDefault(require("../utils/email_cleaner/index.js"));
-const dbsavemssql_js_1 = __importDefault(require("./dbsavemssql.js"));
 const handleanalysis_js_1 = __importDefault(require("./handleanalysis.js"));
 const handletranslation_js_1 = __importDefault(require("./handletranslation.js"));
+const savedb_js_1 = __importDefault(require("./savedb.js"));
 async function processSingleEmail(email, specificReqId) {
     const reqid = email.RecId;
     const htmlBody = email.Comments || "";
@@ -24,8 +24,8 @@ async function processSingleEmail(email, specificReqId) {
     const analysisResult = await (0, handleanalysis_js_1.default)(content, reqid);
     // Database
     const cleanedandoriginal = { ...cleaned, originalEmail };
-    await (0, dbsavemssql_js_1.default)(reqid, cleanedandoriginal, translationResult, analysisResult, specificReqId);
-    // await saveToDatabase(reqid, cleanedandoriginal, translationResult, analysisResult, specificReqId);
+    // await saveToDatabaseMSSQL(reqid, cleanedandoriginal, translationResult, analysisResult, specificReqId)
+    await (0, savedb_js_1.default)(reqid, cleanedandoriginal, translationResult, analysisResult, specificReqId);
     return {
         req_id: reqid,
         was_translated: translationResult.was_translated,

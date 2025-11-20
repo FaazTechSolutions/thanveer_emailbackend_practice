@@ -24,6 +24,7 @@ export interface TranslatedText {
 
 const openrouter = createOpenRouter({
   apiKey: process.env.OPENROUTER_API_KEY,
+
 });
 
 export async function translateText(text: string): Promise<TranslatedText> {

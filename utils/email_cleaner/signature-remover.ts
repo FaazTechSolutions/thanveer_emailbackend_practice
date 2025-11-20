@@ -1,11 +1,3 @@
-import * as cheerio from "cheerio";
-
-//
-// --------------------------------------------------------
-// INTERFACES
-// --------------------------------------------------------
-//
-
 export interface CleanerConfig {
   preserveLinks?: boolean;
   maxLength?: number;
@@ -38,137 +30,36 @@ export interface CleanedEmail {
   };
 }
 
-export interface ExtractedTable {
-  index: number;
-  html: string;
-  json: any[];
-}
-
-export interface FinalCleanResult {
-  finalText: string;
-  tables: ExtractedTable[];
-}
-
-//
-// --------------------------------------------------------
-// MAIN CLEANER WITH TABLE JSON INJECTION
-// --------------------------------------------------------
-//
-
-export function cleanEmailWithTables(
-  text: string,
-  config: CleanerConfig = {}
-): FinalCleanResult {
-  if (!text) {
-    return {
-      finalText: "",
-      tables: [],
-    };
-  }
-
-  const tables: ExtractedTable[] = [];
-  const $ = cheerio.load(text);
-
-  const tableElements = $("table");
-
-  // Extract tables → convert → replace with placeholders
-  tableElements.each((i, table) => {
-    const tableHtml = $.html(table);
-    const parsedTable = convertTableToJson($(table), $);
-
-    tables.push({
-      index: i,
-      html: tableHtml,
-      json: parsedTable,
-    });
-
-    $(table).replaceWith(`{{TABLE_JSON_${i}}}`);
-  });
-
-  // Remove signature from text with placeholders
-  const htmlWithoutTables = $.html();
-  const cleanedText = removeSignature(htmlWithoutTables, config);
-
-  // Reinsert JSON.stringify(table) into placeholders
-  let finalText = cleanedText;
-  tables.forEach((t) => {
-    finalText = finalText.replace(
-      `{{TABLE_JSON_${t.index}}}`,
-      JSON.stringify(t.json)
-    );
-  });
-
-  return {
-    finalText,
-    tables,
-  };
-}
-
-//
-// --------------------------------------------------------
-// TABLE → JSON CONVERTER (EXPORTED)
-// --------------------------------------------------------
-//
-
-export function convertTableToJson(table: any, $: any): any[] {
-  const rows = table.find("tr");
-  const result: any[] = [];
-  let headers: string[] = [];
-
-  rows.each((index, row) => {
-    const cells = $(row).find("th,td");
-    const rowData: any = {};
-
-    // Header row
-    if (index === 0) {
-      headers = cells
-        .map((_, cell) => $(cell).text().trim())
-        .get();
-      return;
-    }
-
-    // Data rows
-    cells.each((i, cell) => {
-      const key = headers[i] || `col_${i + 1}`;
-      rowData[key] = $(cell).text().trim();
-    });
-
-    result.push(rowData);
-  });
-
-  return result;
-}
-
-//
-// --------------------------------------------------------
-// ORIGINAL SIGNATURE REMOVAL LOGIC (UNCHANGED)
-// --------------------------------------------------------
-//
-
 export function removeSignature(text: string, config: CleanerConfig = {}): string {
   if (!text) return "";
   const lines = text.split("\n");
   const minContent = config.minContentLength || 50;
 
-  if (text.length < minContent * 2) return text;
+  // Don't remove signature if content is already very short
+  if (text.length < minContent * 2) {
+    return text;
+  }
 
+  // Standard delimiter check (highest confidence)
   const delimiterIndex = lines.findIndex(
     (l) => /^--\s*$/.test(l.trim()) || /^—{2,}\s*$/.test(l.trim())
   );
-
   if (delimiterIndex > 5) {
     return lines.slice(0, delimiterIndex).join("\n").trim();
   }
 
+  // Signature detection with context awareness
   let signatureStartIndex = lines.length;
   let signatureConfidence = 0;
 
+  // Strong signature markers (high confidence)
   const strongSignatureMarkers = [
     /^Sent from my (iPhone|iPad|Android|BlackBerry|Windows Phone)/i,
     /^Get Outlook for (iOS|Android)/i,
     /^Sent from Mail for Windows/i,
   ];
 
+  // Weak signature markers (need multiple to confirm)
   const weakSignatureMarkers = [
     /^(Best|Kind|Warm|With)\s+(regards|wishes)/i,
     /^Thanks?,?$/i,
@@ -176,43 +67,61 @@ export function removeSignature(text: string, config: CleanerConfig = {}): strin
     /^Regards,?$/i,
     /^Cheers,?$/i,
     /^Sincerely,?$/i,
-    /^\+?\d{1,3}[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}$/,
-    /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-    /^https?:\/\//i,
+    /^\+?\d{1,3}[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}$/,  // Phone
+    /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,  // Email
+    /^https?:\/\//i,  // URL
   ];
 
+  // Professional title patterns
   const titlePatterns = [
     /^(CEO|CTO|CFO|COO|Director|Manager|Engineer|Developer|Specialist|Analyst|Consultant)/i,
   ];
 
+  // Scan from 60% of email onwards (signatures are usually at end)
   const scanStart = Math.floor(lines.length * 0.6);
 
-  for (let i = scanStart; i < lines.length; i++) {
+  for (let i = Math.max(scanStart, 0); i < lines.length; i++) {
     const line = lines[i].trim();
     if (!line) continue;
 
-    if (strongSignatureMarkers.some((p) => p.test(line))) {
-      return lines.slice(0, i).join("\n").trim();
+    // Check strong markers (immediate signature detection)
+    for (const pattern of strongSignatureMarkers) {
+      if (pattern.test(line)) {
+        return lines.slice(0, i).join("\n").trim();
+      }
     }
 
-    let matches =
-      weakSignatureMarkers.filter((p) => p.test(line)).length +
-      titlePatterns.filter((p) => p.test(line)).length;
+    // Check weak markers (accumulate confidence)
+    let lineMatches = 0;
+    for (const pattern of weakSignatureMarkers) {
+      if (pattern.test(line)) {
+        lineMatches++;
+      }
+    }
 
-    if (matches > 0) {
-      signatureConfidence += matches;
+    for (const pattern of titlePatterns) {
+      if (pattern.test(line)) {
+        lineMatches++;
+      }
+    }
+
+    if (lineMatches > 0) {
+      signatureConfidence += lineMatches;
       if (signatureStartIndex === lines.length) {
         signatureStartIndex = i;
       }
     }
 
-    if (signatureConfidence >= 3) break;
+    // If we've accumulated enough confidence, cut there
+    if (signatureConfidence >= 3 && signatureStartIndex < lines.length) {
+      break;
+    }
   }
 
-  const before = lines.slice(0, signatureStartIndex).join("\n");
-
-  if (signatureConfidence >= 3 && before.length >= minContent) {
-    return before.trim();
+  // Only remove signature if we're confident AND there's enough content before it
+  const contentBeforeSignature = lines.slice(0, signatureStartIndex).join("\n");
+  if (signatureConfidence >= 3 && contentBeforeSignature.length >= minContent) {
+    return contentBeforeSignature.trim();
   }
 
   return text;
