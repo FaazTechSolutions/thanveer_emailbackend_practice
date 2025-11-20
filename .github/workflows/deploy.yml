@@ -1,4 +1,4 @@
-name: Build and Deploy Email Backend
+name: Build and Deploy Email Backend 
 
 on:
   push:
