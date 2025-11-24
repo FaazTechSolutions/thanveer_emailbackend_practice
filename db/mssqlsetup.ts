@@ -4,15 +4,35 @@ import dotenv from "dotenv";
 dotenv.config();
 
 // Configuration object for Azure SQL
+// const config: sql.config = {
+//   user: process.env.DB_USER || "ftsdev",
+//   password: process.env.DB_PASSWORD || "Faaz@123",
+//   server: process.env.DB_SERVER || "ftsdev.database.windows.net",
+//   database: process.env.DB_NAME || "FreeServerLess",
+//   port: parseInt(process.env.DB_PORT || "1433"),
+//   options: {
+//     encrypt: true, // Azure requires encryption
+//     trustServerCertificate: false,
+//     enableArithAbort: true,
+//     connectTimeout: 30000,
+//   },
+//   pool: {
+//     max: 10,
+//     min: 0,
+//     idleTimeoutMillis: 30000,
+//   },
+// };
 const config: sql.config = {
-  user: process.env.DB_USER || "ftsdev",
-  password: process.env.DB_PASSWORD || "Faaz@123",
-  server: process.env.DB_SERVER || "ftsdev.database.windows.net",
-  database: process.env.DB_NAME || "FreeServerLess",
+  user: process.env.DB_USER || "OCRADMIN",
+  password: process.env.DB_PASSWORD || "Pass@3210",
+  server: process.env.DB_SERVER || "dm.mawarid.com.sa",
+  database: process.env.DB_NAME || "EmailAgentTest",
   port: parseInt(process.env.DB_PORT || "1433"),
   options: {
-    encrypt: true, // Azure requires encryption
-    trustServerCertificate: false,
+    encrypt: process.env.DB_ENCRYPT ? process.env.DB_ENCRYPT === "true" : true,
+    trustServerCertificate: process.env.DB_TRUST_CERT
+      ? process.env.DB_TRUST_CERT === "true"
+      : true,
     enableArithAbort: true,
     connectTimeout: 30000,
   },
@@ -22,6 +42,7 @@ const config: sql.config = {
     idleTimeoutMillis: 30000,
   },
 };
+
 
 async function setupTablesMSSQL() {
   let pool: sql.ConnectionPool | undefined;

@@ -5,7 +5,8 @@ import { removeSignature } from "./signature-remover.js";
 import { removeDisclaimers } from "./disclaimer-remover.js";
 import { extractPrePostText } from "./prepost-extractor.js";
 import { removeQuoteMarkers } from "./quote-remover.js";
-import { finalcleanEmailtext } from "./html-to-text1.js";
+import { finalcleanEmailtext, finalcleanEmailtextwithjson, finalcleanEmailtextwithtoon,  } from "./html-to-text1.js";
+import { stripRepeatedEmailHeaders } from "./emailheaderremover.js";
 export interface CleanerConfig {
   preserveLinks?: boolean;
   maxLength?: number;
@@ -46,7 +47,7 @@ export default function cleanEmail(
 
   // Step 1: HTML to plain text
   // let text = htmlToPlainText(htmlBody, mergedConfig);
-  let text = finalcleanEmailtext(htmlBody, mergedConfig);
+  let text = finalcleanEmailtextwithjson(htmlBody, mergedConfig);
   if (!text || text.length < 10) {
     return {
       pretext: "",
@@ -63,27 +64,28 @@ export default function cleanEmail(
     };
   }
 
-  // Step 2: Extract latest thread
-  text = extractLatestThread(text);
+
+  // // Step 2: Extract latest thread
+  // text = extractLatestThread(text);
 
   // Step 3: Remove quotes if requested
-  if (mergedConfig.removeQuotes) {
-    text = removeQuoteMarkers(text);
-  }
+  // if (mergedConfig.removeQuotes) {
+  //   text = removeQuoteMarkers(text);
+  // }
 
-  // Step 4: Remove disclaimers
-  text = removeDisclaimers(text);
+  // // Step 4: Remove disclaimers
+  // text = removeDisclaimers(text);
 
-  // Step 5: Remove signature
-  text = removeSignature(text, mergedConfig);
+  // // Step 5: Remove signature
+  // text = removeSignature(text, mergedConfig);
 
-  // Step 6: Final cleanup
-  text = text.trim();
+  // // Step 6: Final cleanup
+  // text = text.trim();
 
-  // Step 7: Truncate if needed
-  if (mergedConfig.maxLength && text.length > mergedConfig.maxLength) {
-    text = text.substring(0, mergedConfig.maxLength) + "...";
-  }
+  // // Step 7: Truncate if needed
+  // if (mergedConfig.maxLength && text.length > mergedConfig.maxLength) {
+  //   text = text.substring(0, mergedConfig.maxLength) + "...";
+  // }
 
   // Step 8: Extract structured parts
   const { pretext, core, posttext } = extractPrePostText(text);

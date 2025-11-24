@@ -58,7 +58,12 @@ export interface AnalysisResult extends EmailAnalysis {
 
 
 
-const openrouter = createOpenRouter({ apiKey: process.env.OPENROUTER_API_KEY });
+const openrouter = createOpenRouter({ apiKey: process.env.OPENROUTER_API_KEY,
+ headers: {
+       "X-Title": "EmailAgent",           
+       "HTTP-Referer": "https://emailagentui.vercel.app/"// optional second metadata
+  }
+ });
 const MODEL = process.env.ANALYZER_AI_MODEL || "openai/gpt-4o-mini";
 
 const ACTION_PROMPT = `
@@ -91,6 +96,13 @@ export async function planNextAction(
       model: openrouter(MODEL),
       prompt,
       temperature: 0.2,
+       headers: {
+    "X-Title": "EmailAgent action",
+    "X-Description": "Email cleaning, translation, and analysis agent",
+    "X-App-Name": "EmailAgent API",
+    "X-App-Version": "1.0.0",
+    "X-Developer": "Thanveer",
+  }
     });
 
     const parsed = safeJsonParse(result.text);

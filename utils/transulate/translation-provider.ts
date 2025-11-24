@@ -22,8 +22,13 @@ export interface TranslatedText {
   tokenUsage?: TokenUsage;
 }
 
+
 const openrouter = createOpenRouter({
   apiKey: process.env.OPENROUTER_API_KEY,
+   headers: {
+       "X-Title": "EmailAgent",           
+       "HTTP-Referer": "https://emailagentui.vercel.app/"// optional second metadata
+  },
 
 });
 
@@ -84,12 +89,36 @@ export async function translateEmail(
   }
 
   try {
-    const prompt = `
-      Translate the following Arabic email into professional English.
-      Preserve ALL formatting, bullet points, headers, and structure.
-      Return ONLY the translated text.
-      Subject: ${subject}
-      Body: ${body}
+
+    // const prompt = `
+    //   Translate the following Arabic email into professional English.
+    //   Preserve ALL formatting, bullet points, headers, and structure.
+    //   Return ONLY the translated text.
+    //   Subject: ${subject}
+    //   Body: ${body}
+    // `.trim();
+        const prompt = `
+      You are a professional bilingual email translation agent.
+
+Translate the Arabic content into professional English while strictly preserving:
+- Original formatting, spacing, line breaks, bullet points, and indentation.
+- Any JSON, arrays, objects, or Toon-format structures.
+- Any technical formatting such as: 
+  [[TABLE_1]], "blocks", { key: value }, [ arrays ], or structured text.
+- All keys, labels, and JSON structure must remain EXACTLY as they are.
+- Only translate human-readable text values, not field names.
+
+If a field is already English, leave it unchanged.
+Do not remove or add any content.
+
+Return ONLY the translated result with identical structure.
+
+Subject:
+${subject}
+
+Body:
+${body}
+
     `.trim();
 
     const result = await generateText({

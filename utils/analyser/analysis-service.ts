@@ -51,23 +51,94 @@ export interface AnalysisResult extends EmailAnalysis {
   processing_time_ms?: number;
 }
 
-const openrouter = createOpenRouter({ apiKey: process.env.OPENROUTER_API_KEY });
+const openrouter = createOpenRouter({ apiKey: process.env.OPENROUTER_API_KEY,
+ headers: {
+       "X-Title": "EmailAgent",           
+       "HTTP-Referer": "https://emailagentui.vercel.app/"// optional second metadata
+  }
+ });
 const MODEL = process.env.ANALYZER_AI_MODEL || "openai/gpt-4o-mini";
 
+// const ANALYSIS_PROMPT = `
+// You are an expert email analysis agent. Analyze the following email and return structured JSON.
+// ### Instructions:
+// 1. **Classification**: Determine the category, priority, and sentiment with confidence scores (0-1).
+//    - Categories: billing, technical_support, account_management, product_inquiry, complaint, feedback, other
+//    - Priority: low, medium, high, urgent
+//    - Sentiment: positive, neutral, negative, frustrated
+// 2. **Structured Data**: Extract all relevant key-value pairs with confidence scores.
+// 3. **Action Items**: List specific actions with confidence scores.
+// 4. **Summary**: Provide a concise 1-2 sentence summary of the email content.
+// 5. **Confidence Scores**: Provide overall and per-section confidence (0-1).
+// ### Email:
+// {{EMAIL}}
+// ### Response Format:
+// {
+//   "classification": {
+//     "category": "string",
+//     "priority": "string",
+//     "sentiment": "string",
+//     "confidence": number
+//   },
+//   "structured_data": {
+//     "key1": {"value": "string", "confidence": number},
+//     ...
+//     "confidence": number
+//   },
+//   "action_items": [
+//     {"action": "string", "confidence": number},
+//     ...
+//   ],
+//   "summary": "string",
+//   "confidence_scores": {
+//     "overall": number,
+//     "classification": number,
+//     "structured_data": number,
+//     "action_items": number
+//   }
+// }
+// `;
 const ANALYSIS_PROMPT = `
-You are an expert email analysis agent. Analyze the following email and return structured JSON.
-### Instructions:
-1. **Classification**: Determine the category, priority, and sentiment with confidence scores (0-1).
-   - Categories: billing, technical_support, account_management, product_inquiry, complaint, feedback, other
-   - Priority: low, medium, high, urgent
-   - Sentiment: positive, neutral, negative, frustrated
-2. **Structured Data**: Extract all relevant key-value pairs with confidence scores.
-3. **Action Items**: List specific actions with confidence scores.
-4. **Summary**: Provide a concise 1-2 sentence summary of the email content.
-5. **Confidence Scores**: Provide overall and per-section confidence (0-1).
-### Email:
-{{EMAIL}}
-### Response Format:
+You are an advanced email-analysis engine. Operate with high precision and return strictly valid JSON.
+
+### Core Requirements:
+1. **Classification**
+   Determine the email's:
+   - category: billing, technical_support, account_management, product_inquiry, complaint, feedback, other
+   - priority: low, medium, high, urgent
+   - sentiment: positive, neutral, negative, frustrated  
+   Include a confidence score (0–1) for each property and an overall classification confidence.
+
+2. **Structured Data Extraction**
+   Extract all relevant key-value pairs from the email body.  
+   You may receive pre-parsed TABLE blocks (e.g., TABLE_1, TABLE_2) already converted to JSON.  
+   Always incorporate data found in these tables.  
+   For every extracted field:  
+   - provide "value"  
+   - provide "confidence" (0–1)  
+   Also include an overall confidence score for structured data.
+
+3. **Action Items**
+   Extract actionable tasks or required follow-ups.  
+   Each action must include a confidence score (0–1).
+
+4. **Summary**
+   Generate a clear, concise 1–2 sentence summary covering the core intent of the email.
+
+5. **Confidence Framework**
+   Provide:
+   - overall confidence  
+   - classification confidence  
+   - structured data confidence  
+   - action-items confidence  
+
+### Input Format:
+The email may include:
+- Normal text body  
+- Pre-extracted TABLE_X blocks containing JSON  
+- Headers or signatures removed by preprocessing  
+
+### Output Format (strict JSON):
 {
   "classification": {
     "category": "string",
@@ -76,7 +147,8 @@ You are an expert email analysis agent. Analyze the following email and return s
     "confidence": number
   },
   "structured_data": {
-    "key1": {"value": "string", "confidence": number},
+    "field1": {"value": "string", "confidence": number},
+    "field2": {"value": "string", "confidence": number},
     ...
     "confidence": number
   },
@@ -92,7 +164,11 @@ You are an expert email analysis agent. Analyze the following email and return s
     "action_items": number
   }
 }
-`;
+
+### Email:
+{{EMAIL}}
+
+`
 
 const SUMMARY_PROMPT = `
 Generate a concise 1-2 sentence summary of this email:
@@ -114,6 +190,7 @@ export async function analyzeEmail(subject: string, body: string): Promise<Email
       model: openrouter(MODEL),
       prompt: analysisPrompt,
       temperature: 0.1,
+ 
     });
 
     const parsedAnalysis = safeJsonParse(analysisResult.text);

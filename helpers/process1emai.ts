@@ -1,3 +1,4 @@
+import { calculateTokenStats, splitTextIntoChunks } from "../utils/analysis/calculatetokensfromtext.js";
 import cleanEmail from "../utils/email_cleaner/index.js";
 import saveToDatabaseMSSQL from "./dbsavemssql.js";
 import handleAnalysis from "./handleanalysis.js";
@@ -12,6 +13,12 @@ export default async function processSingleEmail(email: any, specificReqId?: str
   const cleaned = cleanEmail(htmlBody);
   const originalEmail = { subject: email.Subject , body: cleaned.cleanText };
   console.log(`🧹 [CLEANED] reqid=${reqid}`);
+  const chunks = splitTextIntoChunks(originalEmail.body, 1500);
+
+  
+const stats = calculateTokenStats(chunks);
+
+console.log(stats);
 
   // Translation
   const translationResult = await handleTranslation(originalEmail, reqid);
@@ -37,3 +44,39 @@ export default async function processSingleEmail(email: any, specificReqId?: str
     created_at: new Date().toISOString(),
   };
 }
+
+// export default async function processSingleEmailallstep(email: any, specificReqId?: string) {
+//   const reqid = email.RecId;
+//   const htmlBody = email.Comments || "";
+
+//     // Cleaning
+//   const cleaned = cleanEmail(htmlBody);
+//   const originalEmail = { subject: email.Subject , body: cleaned.cleanText };
+//   console.log(`🧹 [CLEANED] reqid=${reqid}`);
+//   const chunks = splitTextIntoChunks(originalEmail.body, 1500);
+
+  
+// const stats = calculateTokenStats(chunks);
+
+// console.log(stats);
+// console.log("______________________________");
+// console.log(originalEmail.body)
+
+  
+
+
+//   return {
+
+//     req_id: reqid,
+//     was_translated: false,
+//     process_label: specificReqId ? "processX" : null,
+//     summary: "",
+//     requires_human_review: false,
+//     review_reason: "",
+//     created_at: new Date().toISOString(),
+
+//   };
+// }
+
+
+

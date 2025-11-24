@@ -1,5 +1,9 @@
 import * as cheerio from 'cheerio';
 import { convert } from "html-to-text";
+import { convertToToon } from '../helpers/toonconvertor';
+import { removeQuoteMarkers } from './quote-remover';
+import { removeDisclaimers } from './disclaimer-remover';
+import { removeSignature } from './signature-remover';
 
 //
 // --------------------------------------------------------
@@ -85,12 +89,387 @@ function stripHtmlFallback(html: string): string {
 }
 
 function postProcessText(text: string): string {
-  return text
+  return text  
     .replace(/ +/g, " ")
     .replace(/\n{3,}/g, "\n\n")
+      
     .trim();
 }
+export function finalcleanEmailtextwithtoon(html: string, config: CleanerConfig = {}): string {
+  if (!html) return "";
 
+  const $ = cheerio.load(html);
+  const tableStore: any[] = [];
+
+  // STEP 1 — Extract tables and classify
+  $("table").each((index, table) => {
+    const tableHtml = $.html(table);
+    const extracted = extractSingleTableToJson(tableHtml);
+    const { isSignature, rows } = extracted;
+
+    const isEmpty = !rows || rows.length === 0;
+    const isLayoutTable =
+      rows.length === 1 &&
+      Object.values(rows[0]).every((v) => !v || v === "");
+
+    // Skip signature tables + empty layout tables
+    if (isSignature || isEmpty || isLayoutTable) {
+      $(table).remove();
+      return;
+    }
+
+    const toon = convertToToon(extracted);
+
+    tableStore.push({
+      index,
+      toon,
+    });
+
+    $(table).replaceWith(`[[TABLE_${index}]]`);
+  });
+
+  // STEP 2 — Convert HTML to plain text
+  let text = htmlToPlainText($.html(), config);
+
+  // STEP 3 — Protect Toon blocks BEFORE cleaning
+  tableStore.forEach((t) => {
+    const placeholder = `[[TABLE_${t.index}]]`;
+    const safeBlock = `__TABLE_START__${placeholder}__TABLE_END__`;
+    text = text.replace(placeholder, safeBlock);
+  });
+
+  // STEP 4 — Clean body text in SAFE ORDER
+  if (config.removeQuotes !== false) {
+    text = removeQuoteMarkers(text);
+  }
+
+  text = removeDisclaimers(text);
+  text = removeSignature(text, config);
+
+  // STEP 5 — Unprotect blocks
+  text = text.replace(/__TABLE_START__/g, "").replace(/__TABLE_END__/g, "");
+
+  // STEP 6 — Inject Toon tables back into cleaned text
+  tableStore.forEach((t) => {
+    text = text.replace(
+      `[[TABLE_${t.index}]]`,
+      `\n\nTABLE_${t.index + 1}:\n${t.toon}\n\n`
+    );
+  });
+
+  // STEP 7 — Final formatting
+  text = postProcessText(text);
+  
+  return text.trim();
+}
+export function finalcleanEmailtextwithjson(
+  html: string,
+  config: CleanerConfig = {}
+): string {
+  if (!html) return "";
+
+  const $ = cheerio.load(html);
+  const tableStore: any[] = [];
+
+  // STEP 1 - Extract and classify tables
+  $("table").each((index, table) => {
+    const tableHtml = $.html(table);
+    const extracted = extractSingleTableToJson(tableHtml);
+    const { isSignature, rows } = extracted;
+
+    const isEmpty = !rows || rows.length === 0;
+
+    // More robust layout-table detection
+    const isLayoutTable =
+      rows.length <= 1 &&
+      Object.values(rows[0] || {}).filter(Boolean).length <= 2 &&
+      tableHtml.length < 1200;
+
+    if (isSignature || isEmpty || isLayoutTable) {
+      $(table).remove();
+      return;
+    }
+
+    tableStore.push({
+      index,
+      rows: extracted.rows,
+    });
+
+    $(table).replaceWith(`[[TABLE_${index}]]`);
+  });
+
+  // STEP 2 - Convert HTML to clean text
+  let text = htmlToPlainText($.html(), config);
+  text = stripRepeatedEmailHeaders(text);
+
+  // STEP 3 - Protect table placeholders
+  tableStore.forEach((t) => {
+    const ph = `[[TABLE_${t.index}]]`;
+    const protectedTag = `__TABLE_BLOCK_${t.index}__`;
+    text = text.replace(ph, protectedTag);
+  });
+
+  // STEP 4 - Cleaning steps
+  if (config.removeQuotes !== false) {
+    text = removeQuoteMarkers(text);
+  }
+
+  text = removeDisclaimers(text);
+  text = removeSignature(text, config);
+
+  // STEP 5 - Unprotect placeholders back
+  tableStore.forEach((t) => {
+    const protectedTag = `__TABLE_BLOCK_${t.index}__`;
+    const block =
+      `\n\nTABLE_${t.index + 1}:\n` +
+      JSON.stringify(t.rows, null, 2) +
+      `\n\n`;
+
+    text = text.replace(protectedTag, block);
+  });
+
+  // STEP 6 - Final formatting
+  return postProcessText(text);
+}
+
+
+
+// export function finalcleanEmailtextwithtoon(html: string, config: CleanerConfig = {}): string {
+//   if (!html) return "";
+
+//   const $ = cheerio.load(html);
+//   const tableStore: any[] = [];
+
+//   $("table").each((index, table) => {
+//     const tableHtml = $.html(table);
+//     const extracted = extractSingleTableToJson(tableHtml);
+//     const toon =convertToToon(extracted);
+
+//   //  if (!extracted || extracted.isSignature || extracted.rows.length === 0) {
+//   //     $(table).remove();
+//   //     return;
+//   //   }
+    
+
+//     tableStore.push({
+//       index,
+//       toon: toon
+//     });
+
+//     $(table).replaceWith(`[[TABLE_${index}]]`);
+//   });
+
+//   let text = htmlToPlainText($.html(), config);
+
+//   tableStore.forEach(t => {
+//     const toonDump = t.toon
+//     text = text.replace(
+//       `[[TABLE_${t.index}]]`,
+//       `\n\nTABLE_${t.index + 1}:\n${toonDump}\n\n`
+//     );
+//   });
+
+//   return postProcessText(text);
+// }
+
+// export function finalcleanEmailtext(html: string, config: CleanerConfig = {}): string {
+//   if (!html) return "";
+
+//   const $ = cheerio.load(html);
+//   const tableStore: any[] = [];
+
+//   $("table").each((index, table) => {
+//     const tableHtml = $.html(table);
+//     const extracted = extractSingleTableToJson(tableHtml);
+
+//     if (!extracted || extracted.length === 0) {
+//       $(table).remove();
+//       return;
+//     }
+
+
+//     tableStore.push({
+//       index,
+//       json: extracted
+//     });
+
+//     $(table).replaceWith(`[[TABLE_${index}]]`);
+//   });
+
+//   let text = htmlToPlainText($.html(), config);
+
+//   tableStore.forEach(t => {
+//     const jsonDump = JSON.stringify(t.json, null, 2);
+//     text = text.replace(
+//       `[[TABLE_${t.index}]]`,
+//       `\n\nTABLE_${t.index + 1}:\n${jsonDump}\n\n`
+//     );
+//   });
+
+//   return postProcessText(text);
+// }
+
+// function extractSingleTableToJson(htmlTable: string) {
+//   const $ = cheerio.load(htmlTable);
+//   const rows = $("tr");
+//   const jsonRows: any[] = [];
+//   let headers: string[] = [];
+
+//   rows.each((rowIndex, row) => {
+//     const cells = $(row).find("th, td");
+
+//     if (headers.length === 0 && $(row).find("th").length > 0) {
+//       cells.each((i, cell) => {
+//         const t = $(cell).text().trim();
+//         headers.push(t || `Column_${i + 1}`);
+//       });
+//       return;
+//     }
+
+//     if (headers.length === 0 && rowIndex === 0) {
+//       cells.each((i, cell) => {
+//         const t = $(cell).text().trim();
+//         headers.push(t || `Column_${i + 1}`);
+//       });
+//       return;
+//     }
+
+//     const obj: any = {};
+//     cells.each((i, cell) => {
+//       const value = $(cell).text().trim();
+//       const key = headers[i] || `Column_${i + 1}`;
+//       obj[key] = value;
+//     });
+
+//     if (Object.keys(obj).length > 0) {
+//       jsonRows.push(obj);
+//     }
+//   });
+
+//   return jsonRows;
+// }
+// function extractSingleTableToJson(htmlTable: string) {
+//   const $ = cheerio.load(htmlTable);
+//   const rows = $("tr");
+//   const jsonRows: any[] = [];
+//   let headers: string[] = [];
+//   let headerDetected = false;
+
+//   // Detect signature BEFORE extraction
+//   const isSignature = detectSignatureTable($(htmlTable).text());
+
+//   rows.each((rowIndex, row) => {
+//     const cells = $(row).find("th, td");
+
+//     // STEP 1 — Header row with <th>
+//     if (!headerDetected && $(row).find("th").length > 0) {
+//       headers = cells.map((i, cell) => {
+//         const t = $(cell).text().trim();
+//         return t || `Column_${i + 1}`;
+//       }).get();
+//       headerDetected = true;
+//       return;
+//     }
+
+//     // STEP 2 — First row heuristics
+//     const rawValues = cells.map((i, cell) => $(cell).text().trim()).get();
+
+//     if (!headerDetected && rowIndex === 0) {
+//       const looksHeader = rawValues.some(v => /[a-zA-Z]/.test(v)); // contains letters?
+
+//       if (looksHeader) {
+//         headers = rawValues.map((t, i) => t || `Column_${i + 1}`);
+//         headerDetected = true;
+//         return;
+//       }
+
+//       // If it doesn't look like header → treat as DATA row
+//       headers = rawValues.map((_, i) => `Column_${i + 1}`);
+//       headerDetected = true;
+
+//       const obj: any = {};
+//       rawValues.forEach((v, i) => obj[headers[i]] = v);
+//       jsonRows.push(obj);
+//       return;
+//     }
+
+//     // STEP 3 — Normal data rows
+//     const obj: any = {};
+//     rawValues.forEach((v, i) => {
+//       obj[headers[i] || `Column_${i + 1}`] = v;
+//     });
+
+//     jsonRows.push(obj);
+//   });
+
+//   return {
+//     isSignature,
+//     rows: jsonRows
+//   };
+// }
+function extractSingleTableToJson(htmlTable: string) {
+  const $ = cheerio.load(htmlTable);
+  const rows = $("tr");
+  const jsonRows: any[] = [];
+
+  // Detect signature once (outside row parsing)
+  const isSignature = detectSignatureTable($(htmlTable).text());
+
+  // 1. NORMALIZE all cell values: strip <p>, <span>, RTL noise
+  function cleanCell(cell: cheerio.Cheerio): string {
+    return cell.text()
+      .replace(/\s+/g, " ")
+      .replace(/[\u200e\u200f\u202a-\u202e]/g, "") // RTL marks
+      .trim();
+  }
+
+  // 2. Extract ALL rows as raw arrays
+  const rawRows: string[][] = [];
+  rows.each((_, row) => {
+    const cells = $(row).find("th, td");
+    const cleaned = cells.map((i, cell) => cleanCell($(cell))).get();
+    if (cleaned.length > 0) rawRows.push(cleaned);
+  });
+
+  if (rawRows.length === 0) {
+    return { isSignature, rows: [] };
+  }
+
+  // 3. Detect header row dynamically (GLOBAL detection)
+  const firstRow = rawRows[0];
+  const hasLetters = firstRow.some(v => /[a-zA-Z]/.test(v));
+  const hasArabicLetters = firstRow.some(v => /[\u0600-\u06FF]/.test(v));
+  const tooNumeric = firstRow.filter(v => /^\d+$/.test(v)).length > (firstRow.length / 2);
+  const looksLikeData = tooNumeric && !hasLetters && !hasArabicLetters;
+
+  let headers: string[] = [];
+
+  if (!looksLikeData) {
+    // First row is header
+    headers = firstRow.map((h, i) => h || `Column_${i+1}`);
+  } else {
+    // First row is data → generate synthetic headers
+    headers = firstRow.map((_, i) => `Column_${i+1}`);
+    // And include first row as data
+    const obj: any = {};
+    firstRow.forEach((v, i) => obj[headers[i]] = v);
+    jsonRows.push(obj);
+  }
+
+  // 4. Process remaining rows
+  for (let r = looksLikeData ? 1 : 1; r < rawRows.length; r++) {
+    const row = rawRows[r];
+    const obj: any = {};
+
+    row.forEach((v, i) => {
+      obj[headers[i] || `Column_${i+1}`] = v;
+    });
+
+    jsonRows.push(obj);
+  }
+
+  return { isSignature, rows: jsonRows };
+}
 
 
 
@@ -123,15 +502,17 @@ $("table").each((index, table) => {
   const extracted = extractSingleTableToJson(tableHtml);
 
   // If table has no usable rows → remove and DO NOT add to tableStore
-  if (!extracted || extracted.length === 0) {
-    $(table).remove();
-    return; // skip marker creation
-  }
+ 
+    if (!extracted || extracted.isSignature || extracted.rows.length === 0) {
+      $(table).remove();
+      return;
+    }
+
 
   // Valid table → store and replace with marker
   tableStore.push({
     index,
-    json: extracted
+    json: extracted.rows
   });
 
   $(table).replaceWith(`[[TABLE_${index}]]`);
@@ -174,49 +555,106 @@ export function tableJsonToMarkdown(rows: any[]): string {
   });
 
   return [headerLine, separatorLine, ...dataLines].join("\n");
+  
+}
+function detectSignatureTable(text: string): boolean {
+  const lower = text.toLowerCase();
+
+  // Universal global signature phrases
+  const strong = [
+    "best regards",
+    "kind regards",
+    "thanks & regards",
+    "warm regards",
+    "sent from my iphone",
+    "sent from my android",
+    "sincerely",
+    "yours truly"
+  ];
+
+  // Contact block signals – must match at least 2
+  const contactSignals = [
+    /\+\d{1,3}\s?\d{6,12}/,   // international phone
+    /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/, // email
+    /www\./,
+    /\.com\b/,
+  ];
+
+  // Address fragment signals (global)
+  const addressSignals = [
+    "p.o. box",
+    "street",
+    "road",
+    "building",
+    "suite",
+    "kingdom of saudi arabia",
+    "united arab emirates",
+    "uae",
+    "usa",
+    "uk",
+    "canada"
+  ];
+
+  // 1) Strong signature markers → auto match
+  if (strong.some(s => lower.includes(s))) return true;
+
+  // 2) Contact info check → require at least 2 hits
+  let contactCount = 0;
+  contactSignals.forEach(r => { if (r.test(lower)) contactCount++; });
+  if (contactCount >= 2) return true;
+
+  // 3) Address check → require at least 1 hit + 1 contact signal
+  if (addressSignals.some(s => lower.includes(s)) && contactCount >= 1) {
+    return true;
+  }
+
+  return false;
 }
 
-function extractSingleTableToJson(htmlTable: string) {
-  const $ = cheerio.load(htmlTable);
-  const rows = $("tr");
-  const jsonRows: any[] = [];
-  let headers: string[] = [];
 
-  rows.each((rowIndex, row) => {
-    const cells = $(row).find("th, td");
 
-    // Header detection
-    if (headers.length === 0 && $(row).find("th").length > 0) {
-      cells.each((i, cell) => {
-        const t = $(cell).text().trim();
-        headers.push(t || `Column_${i + 1}`);
-      });
-      return;
-    }
+// function extractSingleTableToJson(htmlTable: string) {
+//   const $ = cheerio.load(htmlTable);
+//   const rows = $("tr");
+//   const jsonRows: any[] = [];
+//   let headers: string[] = [];
 
-    if (headers.length === 0 && rowIndex === 0) {
-      cells.each((i, cell) => {
-        const t = $(cell).text().trim();
-        headers.push(t || `Column_${i + 1}`);
-      });
-      return;
-    }
+//   rows.each((rowIndex, row) => {
+//     const cells = $(row).find("th, td");
 
-    // Data rows
-    const obj: any = {};
-    cells.each((i, cell) => {
-      const value = $(cell).text().trim();
-      const key = headers[i] || `Column_${i + 1}`;
-      obj[key] = value;
-    });
+//     // Header detection
+//     if (headers.length === 0 && $(row).find("th").length > 0) {
+//       cells.each((i, cell) => {
+//         const t = $(cell).text().trim();
+//         headers.push(t || `Column_${i + 1}`);
+//       });
+//       return;
+//     }
 
-    if (Object.keys(obj).length > 0) {
-      jsonRows.push(obj);
-    }
-  });
+//     if (headers.length === 0 && rowIndex === 0) {
+//       cells.each((i, cell) => {
+//         const t = $(cell).text().trim();
+//         headers.push(t || `Column_${i + 1}`);
+//       });
+//       return;
+//     }
 
-  return jsonRows;
-}
+//     // Data rows
+//     const obj: any = {};
+//     cells.each((i, cell) => {
+//       const value = $(cell).text().trim();
+//       const key = headers[i] || `Column_${i + 1}`;
+//       obj[key] = value;
+//     });
+
+//     if (Object.keys(obj).length > 0) {
+//       jsonRows.push(obj);
+//     }
+//   });
+//   console.log("Extracted Table JSON:", jsonRows);
+
+//   return jsonRows;
+// }
 
 
 
@@ -228,10 +666,6 @@ const html = `
 
 
 
-// import { removeSignature } from "./signature-remover.js";
-// import { removeDisclaimers } from "./disclaimer-remover.js";
-// import { extractPrePostText } from "./prepost-extractor.js";
-// import { removeQuoteMarkers } from "./quote-remover.js";
 export interface CleanerConfig {
   preserveLinks?: boolean;
   maxLength?: number;
